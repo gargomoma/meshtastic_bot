@@ -1,0 +1,10 @@
+version: "2"
+services:
+  mstc_ping:
+    build: .
+    environment:
+      CONN_TYPE: "wifi" or "serial"
+      MESHTASTIC_ADDR: "IP_ADDR_OR_SERIAL_PORT"
+      NO_LIMIT_USERS: "YOUR_ID"
+    container_name: mstc_ping
+    restart: unless-stopped
