@@ -8,6 +8,7 @@ import os
 meshtastic_addr = os.environ.get('MESHTASTIC_ADDR', '/dev/ttyUSB0')
 conn_type       = os.environ.get('CONN_TYPE'      , 'serial')
 no_limit_users  = os.environ.get('NO_LIMIT_USERS' , '').split(',')
+
 print("---------------STARTING---------------")
 print(f"No limit users: {no_limit_users}")
 
@@ -63,7 +64,8 @@ def get_channel(packet):
     return 0 if 'channel' not in packet else packet['channel']
     
 def is_mqtt(packet,node_info={}):
-    print(f"is_mqtt=={'viaMqtt' in node_info} or {('rxRssi' not in packet or 'rxSnr' not in packet)}")
+    ##TODO improve MQTT detection. Router_client boards fail, but its clients gets it correctly.
+    #print(f"is_mqtt=={'viaMqtt' in node_info} or {('rxRssi' not in packet or 'rxSnr' not in packet)}")
     return 'viaMqtt' in node_info or ('rxRssi' not in packet or 'rxSnr' not in packet)
 
 def sendText(interface,packet,text):
@@ -99,13 +101,16 @@ def onReceive(packet, interface):
                 print("***Following packet has rxTime missing, adding local time***")
                 packet['rxTime'] = time.time()
             
-            signal_info = "" if fromMqtt else f" [ RSSI:{packet['rxRssi']} SNR:{packet['rxSnr']} ]"            
-            print(f"-#- {ts_toStr(packet['rxTime'])}|UTC From Ch[{get_channel(packet)}] MQTT[{fromMqtt}] -- User: [{fromId}] {users[packet['fromId']]['longName']} ({users[packet['fromId']]['shortName']}){signal_info}")
-            print(f"-#--#- Received: '{message_string}'")
-            print("#####PACKET#####")
-            print(packet)
-            print("------NODE------")
-            print(node_info)
+            packet_info_str = f"🕐{ts_toStr(packet['rxTime'])}|UTC from Ch[{get_channel(packet)}] MQTT[{fromMqtt}]"
+            signal_info_str = "" if fromMqtt else f" 📡[ RSSI:{packet['rxRssi']} SNR:{packet['rxSnr']} ]"
+            user_info_str   = f"👤User: [{fromId}]\t{users[packet['fromId']]['longName']}\t({users[packet['fromId']]['shortName']})"
+            
+            print(f"-#- {packet_info_str} -- {user_info_str}{signal_info_str}\n-#--#- Received: '{message_string}'")
+
+            #print("#####PACKET#####")
+            #print(packet)
+            #print("------NODE------")
+            #print(node_info)
             print("################")
             can_reply = get_can_reply(fromId,packet)
             if can_reply:              
