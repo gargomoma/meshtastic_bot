@@ -1,15 +1,37 @@
+print("---------------STARTING---------------")
+import os
+import requests
+
+TOKEN        = os.environ.get('TG_TOKEN'  , '')
+def_chat_id  = os.environ.get('TG_CHATID' , '')
+
+def send_TgMessage(chat_id=def_chat_id,message='',extra_params={"parse_mode":"HTML"}):
+    global TOKEN
+    extra_params['chat_id'] = chat_id
+    extra_params['text']    = message
+    
+    if chat_id =='' or TOKEN == '':
+        return
+    
+    api_url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?" #chat_id={chat_id}&text={message}"
+    resp = requests.get(api_url, params=extra_params)
+    if resp.status_code!=200:
+        print(resp.url)
+        raise Exception("ERR")
+
+if chat_id =='' or TOKEN == '':
+    print("TG_BOT = Missing chat_id or token, please review")
+
 import meshtastic
 import meshtastic.serial_interface, meshtastic.tcp_interface
 from pubsub import pub
 import time
 import traceback
-import os
 
 meshtastic_addr = os.environ.get('MESHTASTIC_ADDR', '/dev/ttyUSB0')
 conn_type       = os.environ.get('CONN_TYPE'      , 'serial')
 no_limit_users  = os.environ.get('NO_LIMIT_USERS' , '').split(',')
 
-print("---------------STARTING---------------")
 print(f"No limit users: {no_limit_users}")
 
 
@@ -17,6 +39,7 @@ reply_message_ping = "🏓Pong!🏓"
 
 users = {}
 meshtastic_interface = None
+myNodeInfo = {}
 
 def ts_toStr(timestamp):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
@@ -101,11 +124,16 @@ def onReceive(packet, interface):
                 print("***Following packet has rxTime missing, adding local time***")
                 packet['rxTime'] = time.time()
             
-            packet_info_str = f"🕐{ts_toStr(packet['rxTime'])}|UTC from Ch[{get_channel(packet)}] MQTT[{fromMqtt}]"
+            isDM = packet['toId'] == myNodeInfo['user']['id']
+            
+            packet_info_str = f"🕐{ts_toStr(packet['rxTime'])}|UTC from Ch[{get_channel(packet)}] MQTT[{fromMqtt}] DM[{isDM}]"
             signal_info_str = "" if fromMqtt else f" 📡[ RSSI:{packet['rxRssi']} SNR:{packet['rxSnr']} ]"
             user_info_str   = f"👤User: [{fromId}]\t{users[packet['fromId']]['longName']}\t({users[packet['fromId']]['shortName']})"
             
             print(f"-#- {packet_info_str} -- {user_info_str}{signal_info_str}\n-#--#- Received: '{message_string}'")
+            
+            send_TgMessage(message= f"🕐{packet_info_str}\n👤{user_info_str}\n📡{signal_info_str}<blockquote>{message_string}</blockquote>"
+                               ,extra_params={"parse_mode":"HTML"})
 
             #print("#####PACKET#####")
             #print(packet)
@@ -128,13 +156,12 @@ def onReceive(packet, interface):
 def onConnLost(interface):
     print("---------------Trying to connect---------------")
     time.sleep(10) #seconds
-    #meshtastic_interface.connect()
     connectNode(meshtastic_addr,conn_type)
 
 def onConnEst(interface):
-    ##time.sleep(30) #seconds
-    node_info = interface.getMyNodeInfo()
-    print(f"---------------Connected to: {node_info['user']['longName']}---------------")
+    global myNodeInfo
+    myNodeInfo = interface.getMyNodeInfo()
+    print(f"---------------Connected to: {myNodeInfo['user']['longName']} [{myNodeInfo['user']['id']}]---------------")
     
 pub.subscribe(onReceive, 'meshtastic.receive')
 pub.subscribe(onConnLost,'meshtastic.connection.lost')
@@ -144,5 +171,3 @@ connectNode(meshtastic_addr,conn_type)
 
 while True:
     pass
-
-#meshtastic_interface.close()

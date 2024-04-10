@@ -8,6 +8,7 @@ This simple script leverages the power of **[Meshtastic Python](https://meshtast
 
 * /ping Answers users, helpful to see if the station is succesfully connected to the mesh.
 * /rt   Shows users RSSI and SNR of the "/rt" message recieved by the station. Useful for RangeTests.
+* Telegram messages forwarding.
 
 ## TODO:
 * Avoid spamming & overlap of multiple bot-stations.

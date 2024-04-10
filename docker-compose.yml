@@ -5,6 +5,8 @@ services:
       CONN_TYPE: "wifi" or "serial"
       MESHTASTIC_ADDR: "IP_ADDR_OR_SERIAL_PORT"
       NO_LIMIT_USERS: "YOUR_ID"
+      #TG_TOKEN: ""
+      #TG_CHATID: ""
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0:rwm      
     container_name: mstc_ping
