@@ -19,7 +19,7 @@ def send_TgMessage(chat_id=def_chat_id,message='',extra_params={"parse_mode":"HT
         print(resp.url)
         raise Exception("ERR")
 
-if chat_id =='' or TOKEN == '':
+if def_chat_id =='' or TOKEN == '':
     print("TG_BOT = Missing chat_id or token, please review")
 
 import meshtastic
