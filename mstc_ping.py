@@ -126,13 +126,13 @@ def onReceive(packet, interface):
             
             isDM = packet['toId'] == myNodeInfo['user']['id']
             
-            packet_info_str = f"🕐{ts_toStr(packet['rxTime'])}|UTC from Ch[{get_channel(packet)}] MQTT[{fromMqtt}] DM[{isDM}]"
+            packet_info_str = f"🕐{ts_toStr(packet['rxTime'])}|UTC from Ch[{get_channel(packet)}] MQTT[{fromMqtt}]"
             signal_info_str = "" if fromMqtt else f" 📡[ RSSI:{packet['rxRssi']} SNR:{packet['rxSnr']} ]"
             user_info_str   = f"👤User: [{fromId}]\t{users[packet['fromId']]['longName']}\t({users[packet['fromId']]['shortName']})"
             
-            print(f"-#- {packet_info_str} -- {user_info_str}{signal_info_str}\n-#--#- Received: '{message_string}'")
+            print(f"-#- {packet_info_str} -- {user_info_str}{signal_info_str}\n-#--#-  {'📩PM R' if isDM else '📯 R'}eceived: '{message_string}'")
             
-            send_TgMessage(message= f"🕐{packet_info_str}\n👤{user_info_str}\n📡{signal_info_str}<blockquote>{message_string}</blockquote>"
+            send_TgMessage(message= f"{packet_info_str}\n{user_info_str}\n{signal_info_str}\n{'📩PM' if isDM else ''}<blockquote>{message_string}</blockquote>"
                                ,extra_params={"parse_mode":"HTML"})
 
             #print("#####PACKET#####")
